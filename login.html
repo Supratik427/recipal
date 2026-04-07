@@ -11,28 +11,26 @@
 <div class="login-container">
 
     <h2>Login</h2>
-    <form id="loginForm">
-        <label>Email</label>
-        <input type="email" id="loginEmail" required>
+   <form onsubmit="handleLogin(event)">
+  <input type="email" id="email" placeholder="Enter email" required>
+  <input type="password" id="password" placeholder="Enter password" required>
 
-        <label>Password</label>
-        <input type="password" id="loginPassword" minlength="6" required>
+  <p id="error" style="color:red;"></p>
 
-        <button type="submit">Login</button>
+  <button type="submit">Login</button>
+</form>
     </form>
 
     <h2>Signup</h2>
-    <form id="signupForm">
-        <label>Name</label>
-        <input type="text" id="signupName" required>
+    <form onsubmit="handleSignup(event)">
+  <input type="text" id="name" placeholder="Enter name" required>
+  <input type="email" id="signup-email" placeholder="Enter email" required>
+  <input type="password" id="signup-password" placeholder="Enter password" required>
 
-        <label>Email</label>
-        <input type="email" id="signupEmail" required>
+  <p id="signup-error" style="color:red;"></p>
 
-        <label>Password</label>
-        <input type="password" id="signupPassword" minlength="6" required>
-
-        <button type="submit">Signup</button>
+  <button type="submit">Sign Up</button>
+</form>
     </form>
 
 </div>
@@ -71,6 +69,75 @@
             alert("Password must be at least 6 characters");
             return;
         }
+        function validateEmail(email) {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
+}
+
+function handleLogin(event) {
+  event.preventDefault();
+
+  const email = document.getElementById("email").value.trim();
+  const error = document.getElementById("error");
+
+  error.textContent = "";
+
+  if (!validateEmail(email)) {
+    error.textContent = "Please enter a valid email address";
+    return;
+  }
+  function validateEmail(email) {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
+}
+
+function validatePassword(password) {
+  return password.length >= 6;
+}
+
+function handleSignup(event) {
+  event.preventDefault();
+
+  const name = document.getElementById("name").value.trim();
+  const email = document.getElementById("signup-email").value.trim();
+  const password = document.getElementById("signup-password").value.trim();
+  const error = document.getElementById("signup-error");
+
+  error.textContent = "";
+
+  if (name === "") {
+    error.textContent = "Name cannot be empty";
+    return;
+  }
+
+  if (!validateEmail(email)) {
+    error.textContent = "Enter a valid email";
+    return;
+  }
+
+  if (!validatePassword(password)) {
+    error.textContent = "Password must be at least 6 characters";
+    return;
+  }
+
+  // Check if user already exists
+  const existingUser = JSON.parse(localStorage.getItem("user"));
+
+  if (existingUser && existingUser.email === email) {
+    error.textContent = "Email already registered";
+    return;
+  }
+
+  // Save user
+  const user = { name, email, password };
+  localStorage.setItem("user", JSON.stringify(user));
+
+  alert("Signup successful!");
+}
+
+  // continue login logic
+  alert("Login successful (demo)");
+}
 
         // Save user (optional)
         localStorage.setItem("user", email);
