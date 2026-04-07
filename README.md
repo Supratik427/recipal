@@ -1,70 +1,127 @@
-# RecipePal – Recipe Finder & Meal Planner
+# 🍽️ RecipePal – Find & Plan Meals
 
-A web application to search recipes, save favourites, plan weekly meals, and generate shopping lists.
+## 📌 Project Overview
+RecipePal is a web-based application that helps users discover, save, and plan meals efficiently. It allows users to search for recipes, get random suggestions, save favorites, and organize meals for the week. The application is designed to be user-friendly, responsive, and practical for everyday use.
 
-## Features
+---
 
-- Search thousands of recipes using TheMealDB API
-- Filter by cuisine and category
-- Save favourite recipes (localStorage)
-- 7-day meal planner (breakfast, lunch, dinner)
-- Auto-generated shopping list from planned meals
-- Add and save your own custom recipes
-- Responsive design for mobile and desktop
+## 🚀 Features
 
-## Pages
+### 🔍 Recipe Search
+- Search for recipes using keywords  
+- Fetches real-time data from an external API  
 
-| Page | File | Description |
-|------|------|-------------|
-| Home / Search | `index.html` | Search recipes with filters |
-| Recipe Detail | `recipe.html` | Full recipe with ingredients, steps, YouTube video |
-| Meal Planner | `planner.html` | Weekly planner + shopping list |
-| Favourites | `favourites.html` | Saved and custom recipes |
-| Add Recipe | `add-recipe.html` | Form to add your own recipe |
+### 🎲 Surprise Me (Random Recipe)
+- Displays a random recipe suggestion  
 
-## Forms (3 required)
+### ❤️ Favorites
+- Save and manage favorite recipes  
+- Uses LocalStorage for persistence  
 
-1. **Search Form** (`index.html`) – keyword search with category and cuisine filters
-2. **Add Recipe Form** (`add-recipe.html`) – add custom recipes with full validation
-3. **Meal Planner Form** (`planner.html` modal + `recipe.html` modal) – assign recipes to days/slots
+### 📅 Meal Planner
+- Plan meals for different days of the week  
+- Organize weekly food schedules  
 
-## Tech Stack
+### ➕ Add Custom Recipes
+- Users can add their own recipes  
+- Stored locally  
 
-- HTML5, CSS3, Vanilla JavaScript
-- [TheMealDB API](https://www.themealdb.com/api.php) (free, no key needed)
-- localStorage for data persistence
-- Google Fonts (Playfair Display + DM Sans)
+### 🔐 Login & Signup (UI)
+- Basic frontend authentication interface  
+- Includes form validation  
 
-## How to Run
+---
+
+## 🧾 Forms Implemented
+
+The project includes the following forms:
+
+1. Search Form  
+2. Login Form  
+3. Signup Form  
+4. Add Recipe Form  
+
+✔ All forms include basic validation.
+
+---
+
+## 🛠️ Technologies Used
+
+- HTML5  
+- CSS3  
+- JavaScript  
+- External Recipe API  
+- LocalStorage  
+
+---
+
+## 📱 Responsiveness
+The application is designed to work across different screen sizes using responsive design techniques.
+
+---
+
+## 📂 Project Structure
+
+```
+RecipePal/
+│── index.html
+│── login.html
+│── add-recipe.html
+│── planner.html
+│── styles.css
+│── js/
+│   ├── api.js
+│   ├── storage.js
+│   ├── planner.js
+│   └── main.js
+│── README.md
+```
+
+---
+
+## ⚙️ How to Run the Project
 
 1. Clone the repository:
-   ```
-   git clone https://github.com/YOUR_USERNAME/recipe-planner.git
-   ```
-2. Open `index.html` in your browser — no server or installation needed.
-
-Or view the live demo: [GitHub Pages link here]
-
-## File Structure
-
 ```
-recipe-planner/
-├── index.html         ← Home / Search page
-├── recipe.html        ← Recipe detail page
-├── planner.html       ← Meal planner page
-├── favourites.html    ← Favourites page
-├── add-recipe.html    ← Add custom recipe page
-├── css/
-│   └── style.css      ← All styles
-├── js/
-│   ├── api.js         ← TheMealDB API functions
-│   ├── storage.js     ← localStorage helpers + toast
-│   └── planner.js     ← Meal planner logic
-└── README.md
+git clone https://github.com/Supratik427/recipal.git
 ```
 
-## Team
+2. Open the project folder
 
-- **Name:** [Your Name]
-- **Course:** BCSE203E – Web Programming
-- **Team Name:** [Your Team Name]
+3. Run the app:
+- Open `index.html` in your browser  
+
+---
+
+## 🌐 Live Demo
+GitHub Pages Link:  
+https://supratik427.github.io/recipal/
+
+---
+
+## 👥 Team Details
+
+**Team Name:** *Recipal*  
+
+**Members:**
+-  MURIKI SUPRATIK
+
+---
+
+## 📈 Future Enhancements
+
+- Backend integration (database & authentication)  
+- Advanced filters (veg/non-veg, cuisine, calories)  
+- Dark mode  
+- Improved UI/UX  
+- User accounts with cloud storage  
+
+---
+
+## 📜 Academic Integrity
+This project is developed as part of the **BCSE203E Web Programming Mini Project** and is original work created by the team members. No plagiarism has been involved.
+
+---
+
+## ✨ Conclusion
+RecipePal provides a simple and effective way to discover recipes and plan meals, making everyday cooking more organized and enjoyable.
