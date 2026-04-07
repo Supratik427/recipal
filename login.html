@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login / Signup</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="login-container">
+
+    <h2>Login</h2>
+    <form id="loginForm">
+        <label>Email</label>
+        <input type="email" id="loginEmail" required>
+
+        <label>Password</label>
+        <input type="password" id="loginPassword" minlength="6" required>
+
+        <button type="submit">Login</button>
+    </form>
+
+    <h2>Signup</h2>
+    <form id="signupForm">
+        <label>Name</label>
+        <input type="text" id="signupName" required>
+
+        <label>Email</label>
+        <input type="email" id="signupEmail" required>
+
+        <label>Password</label>
+        <input type="password" id="signupPassword" minlength="6" required>
+
+        <button type="submit">Signup</button>
+    </form>
+
+</div>
+
+<script>
+    // LOGIN
+    document.getElementById("loginForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        const email = document.getElementById("loginEmail").value;
+        const password = document.getElementById("loginPassword").value;
+
+        if (password.length < 6) {
+            alert("Password must be at least 6 characters");
+            return;
+        }
+
+        // Save login status (optional but good)
+        localStorage.setItem("user", email);
+
+        alert("Login successful!");
+
+        // 🔥 REDIRECT TO HOME PAGE
+        window.location.href = "index.html";
+    });
+
+    // SIGNUP
+    document.getElementById("signupForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        const name = document.getElementById("signupName").value;
+        const email = document.getElementById("signupEmail").value;
+        const password = document.getElementById("signupPassword").value;
+
+        if (password.length < 6) {
+            alert("Password must be at least 6 characters");
+            return;
+        }
+
+        // Save user (optional)
+        localStorage.setItem("user", email);
+
+        alert("Signup successful!");
+
+        // 🔥 REDIRECT TO HOME PAGE
+        window.location.href = "index.html";
+    });
+</script>
+</body>
+</html>

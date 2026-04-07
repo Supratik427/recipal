@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RecipePal – Find & Plan Meals</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">RecipePal</a>
+  <ul class="nav-links">
+    <li><a href="index.html" class="active">Search</a></li>
+    <li><a href="planner.html">Meal Planner</a></li>
+    <li><a href="favourites.html">Favourites</a></li>
+    <li><a href="add-recipe.html">Add Recipe</a></li>
+    <li><a href="login.html">Login / Signup</a></li>
+  </ul>
+</nav>
+
+<div class="hero">
+  <h1>Find your next <span>favourite meal</span></h1>
+  <p>Search thousands of recipes, save them, and plan your week</p>
+
+  <!-- SEARCH FORM -->
+  <form id="search-form" onsubmit="handleSearch(event)" style="max-width:720px;margin:0 auto;">
+    
+    <div class="search-wrapper">
+      <div class="form-group" style="flex:2;">
+        <input type="text" id="search-input" class="form-control" placeholder="Search recipes e.g. Pasta, Chicken...">
+        <div class="error-msg" id="search-error">Please enter at least 2 characters</div>
+      </div>
+
+      <div class="form-group">
+        <select id="category-filter" class="form-control" onchange="handleCategoryFilter()">
+          <option value="">All categories</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <select id="area-filter" class="form-control" onchange="handleAreaFilter()">
+          <option value="">All cuisines</option>
+          <option value="Indian">Indian</option>
+          <option value="Italian">Italian</option>
+          <option value="Chinese">Chinese</option>
+          <option value="American">American</option>
+          <option value="French">French</option>
+          <option value="Japanese">Japanese</option>
+          <option value="Mexican">Mexican</option>
+          <option value="Thai">Thai</option>
+          <option value="British">British</option>
+        </select>
+      </div>
+      <div class="form-group">
+  <select id="veg-filter" class="form-control" onchange="onVegChange()">
+    <option value="">Veg or Non-veg</option>
+    <option value="veg">Veg 🥗</option>
+    <option value="nonveg">Non-Veg 🍗</option>
+  </select>
+</div>
+
+      <div class="form-group">
+        <button type="submit" class="btn btn-primary">Search</button>
+      </div>
+    </div>
+    
+  </form>
+
+  <!-- QUICK FILTERS -->
+  <div style="margin-top:1rem;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;" id="quick-filters">
+    <span class="tag" onclick="quickSearch('chicken')">🍗 Chicken</span>
+    <span class="tag" onclick="quickSearch('pasta')">🍝 Pasta</span>
+    <span class="tag" onclick="quickSearch('salad')">🥗 Salad</span>
+    <span class="tag" onclick="quickSearch('soup')">🍜 Soup</span>
+    <span class="tag" onclick="quickSearch('dessert')">🍰 Dessert</span>
+  </div>
+</div>
+
+<div class="container">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:10px;">
+    <h2 class="section-title" id="results-title" style="margin-bottom:0;">Popular recipes</h2>
+    <button class="btn btn-outline btn-sm" onclick="loadRandom()">🎲 Surprise me</button>
+  </div>
+  <div id="results" class="recipe-grid"></div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="js/api.js"></script>
+<script src="js/storage.js"></script>
+
+<script>
+  let currentMeals = [];
+  async function init() {
+    await loadCategories();
+    await loadPopular();
+  }
+
+  async function loadCategories() {
+    const cats = await getCategories();
+    const sel = document.getElementById('category-filter');
+    cats.forEach(c => {
+  if (c.strCategory.toLowerCase() === 'beef' || 
+      c.strCategory.toLowerCase() === 'pork') {
+    return; // skip these
+  }
+
+  const opt = document.createElement('option');
+  opt.value = c.strCategory;
+  opt.textContent = c.strCategory;
+  sel.appendChild(opt);
+});
+  }
+
+ async function loadPopular() {
+  showLoading();
+
+  document.getElementById('results-title').textContent = 'Popular recipes';
+
+  const terms = ['vegetarian', 'dessert', 'pasta', 'salad'];
+  let allMeals = [];
+
+  for (let term of terms) {
+    const meals = await searchRecipes(term);
+    if (meals) {
+      allMeals = allMeals.concat(meals);
+    }
+  }
+
+  // remove duplicates
+  const uniqueMeals = [];
+  const ids = new Set();
+
+  for (let m of allMeals) {
+    if (!ids.has(m.idMeal)) {
+      ids.add(m.idMeal);
+      uniqueMeals.push(m);
+    }
+  }
+
+  currentMeals = uniqueMeals;
+
+  let filtered = applyVegFilter(currentMeals);
+
+  //  fallback if empty
+  if (!filtered || filtered.length === 0) {
+    filtered = uniqueMeals.slice(0, 10);
+  }
+
+  renderRecipes(filtered.slice(0, 12));
+}
+
+  function handleSearch(e) {
+    e.preventDefault();
+    const q = document.getElementById('search-input').value.trim();
+    const errEl = document.getElementById('search-error');
+
+    if (q.length < 2) {
+      document.getElementById('search-input').classList.add('error');
+      errEl.classList.add('show');
+      return;
+    }
+
+    document.getElementById('search-input').classList.remove('error');
+    errEl.classList.remove('show');
+
+    document.getElementById('category-filter').value = '';
+    document.getElementById('area-filter').value = '';
+
+    doSearch(q);
+  }
+
+  async function doSearch(q) {
+  const banned = ['beef', 'pork'];
+
+  if (banned.includes(q.toLowerCase())) {
+    document.getElementById('results').innerHTML =
+      '<p style="text-align:center;color:red;">This item is not allowed.</p>';
+    return;
+  }
+
+  showLoading();
+  document.getElementById('results-title').textContent = `Results for "${q}"`;
+
+  const meals = await searchRecipes(q);
+  currentMeals=meals || [];
+  renderRecipes(applyVegFilter(currentMeals));
+}
+
+ async function handleCategoryFilter() {
+  const cat = document.getElementById('category-filter').value;
+
+  if (cat.toLowerCase() === 'beef' || cat.toLowerCase() === 'pork') {
+    document.getElementById('results').innerHTML =
+      '<p style="text-align:center;color:red;">This category is not allowed.</p>';
+    return;
+  }
+
+  if (!cat) { loadPopular(); return; }
+
+  document.getElementById('search-input').value = '';
+  document.getElementById('area-filter').value = '';
+
+  showLoading();
+  document.getElementById('results-title').textContent = `Category: ${cat}`;
+
+  const meals = await filterByCategory(cat);
+  currentMeals=meals || [];
+  renderRecipes(applyVegFilter(currentMeals.slice(0, 20)));
+}
+
+  async function handleAreaFilter() {
+    const area = document.getElementById('area-filter').value;
+    if (!area) { loadPopular(); return; }
+
+    document.getElementById('search-input').value = '';
+    document.getElementById('category-filter').value = '';
+
+    showLoading();
+    document.getElementById('results-title').textContent = `Cuisine: ${area}`;
+
+    const meals = await filterByArea(area);
+    currentMeals=meals || [];
+    renderRecipes(applyVegFilter(currentMeals.slice(0, 20)));
+  }
+
+  function quickSearch(term) {
+    document.getElementById('search-input').value = term;
+    document.getElementById('category-filter').value = '';
+    document.getElementById('area-filter').value = '';
+    doSearch(term);
+  }
+
+  async function loadRandom() {
+  showLoading();
+  document.getElementById('results-title').textContent = 'Random pick for you';
+
+  const meal = await getRandomRecipe();
+
+  if (!meal) {
+    document.getElementById('results').innerHTML =
+      '<p style="text-align:center;">Failed to load recipe 😕</p>';
+    return;
+  }
+
+  currentMeals = [meal]; // store as array
+  renderRecipes(currentMeals);
+}
+
+  function showLoading() {
+    document.getElementById('results').innerHTML =
+      '<div class="loading"><div class="spinner"></div><p>Finding recipes...</p></div>';
+  }
+
+
+  function renderRecipes(meals) {
+    const el = document.getElementById('results');
+
+    if (!meals || meals.length === 0) {
+  document.getElementById('results').innerHTML =
+    '<p style="text-align:center;">No recipes found 😕</p>';
+  return;
+}
+
+    el.innerHTML = '';
+
+    meals.forEach(m => {
+      const card = document.createElement('div');
+      card.className = 'card recipe-card';
+      card.addEventListener('click', () => openRecipe(m.idMeal));
+
+      const img = document.createElement('img');
+      img.src = m.strMealThumb + '/preview';
+      img.alt = m.strMeal;
+
+      const body = document.createElement('div');
+      body.className = 'recipe-card-body';
+
+      const title = document.createElement('h3');
+      title.textContent = m.strMeal;
+
+      body.appendChild(title);
+      card.appendChild(img);
+      card.appendChild(body);
+      el.appendChild(card);
+    });
+  }
+
+  function openRecipe(id) {
+    window.location.href = 'recipe.html?id=' + id;
+  }
+//  detect veg / non-veg
+function isVeg(meal) {
+  const nonVegWords = [
+    'chicken','beef','pork','fish','egg',
+    'mutton','meat','lamb','turkey','bacon'
+  ];
+
+  const name = (meal.strMeal || "").toLowerCase();
+
+  // stricter detection
+  for (let word of nonVegWords) {
+    if (name.includes(word)) return false;
+  }
+
+  return true;
+}
+function applyVegFilter(meals) {
+  const type = document.getElementById('veg-filter').value;
+
+  if (!type) return meals;
+
+  return meals.filter(m => {
+    const name = (m.strMeal || "").toLowerCase();
+
+    const nonVegWords = [
+      'chicken','beef','pork','fish','egg','mutton',
+      'meat','lamb','turkey','bacon'
+    ];
+
+    const isNonVeg = nonVegWords.some(word => name.includes(word));
+
+    if (type === 'veg') return !isNonVeg;
+    if (type === 'nonveg') return isNonVeg;
+  });
+}
+function onVegChange() {
+  if (!currentMeals || currentMeals.length === 0) {
+    console.log("No meals to filter");
+    return;
+  }
+
+  const filtered = applyVegFilter(currentMeals);
+  renderRecipes(filtered);
+}
+  init();
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recipe – RecipePal</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem; }
+    .detail-img { width: 100%; border-radius: var(--radius); object-fit: cover; max-height: 360px; }
+    .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 1rem 0; }
+    .meta-box { background: var(--bg2); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
+    .meta-box .label { font-size: 0.75rem; color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+    .meta-box .value { font-size: 1rem; font-weight: 500; }
+    .ing-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    .step { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 1.2rem; }
+    .step-num { min-width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 500; }
+    .step p { margin: 0; font-size: 0.92rem; line-height: 1.6; color: var(--text2); }
+    .yt-embed { width: 100%; border-radius: var(--radius); border: none; aspect-ratio: 16/9; }
+    @media (max-width: 700px) { .detail-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">RecipePal</a>
+  <ul class="nav-links">
+    <li><a href="index.html">Search</a></li>
+    <li><a href="planner.html">Meal Planner</a></li>
+    <li><a href="favourites.html">Favourites</a></li>
+    <li><a href="add-recipe.html">Add Recipe</a></li>
+  </ul>
+</nav>
+
+<div id="content">
+  <div class="loading" style="padding:4rem;">
+    <div class="spinner"></div>
+    <p>Loading recipe...</p>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<!-- Add to Planner Modal -->
+<div class="modal-overlay" id="planner-modal">
+  <div class="modal">
+    <h2>Add to Meal Planner</h2>
+    <div class="form-group">
+      <label class="form-label">Day</label>
+      <select id="modal-day" class="form-control">
+        <option value="">Select a day</option>
+        <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+        <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
+      </select>
+      <div class="error-msg" id="day-error">Please select a day</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Meal slot</label>
+      <select id="modal-slot" class="form-control">
+        <option value="">Select slot</option>
+        <option>Breakfast</option><option>Lunch</option><option>Dinner</option>
+      </select>
+      <div class="error-msg" id="slot-error">Please select a meal slot</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmAddToPlanner()">Add to planner</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/storage.js"></script>
+<script>
+  let currentMeal = null;
+
+  async function init() {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    if (!id) { window.location.href = 'index.html'; return; }
+
+    const meal = await getRecipeById(id);
+    if (!meal) { document.getElementById('content').innerHTML = '<div class="empty-state"><p>Recipe not found.</p><a href="index.html" class="btn btn-primary" style="margin-top:1rem;">Go back</a></div>'; return; }
+
+    currentMeal = meal;
+    document.title = `${meal.strMeal} – RecipePal`;
+    renderRecipe(meal);
+  }
+// 🇮🇳 INDIAN RECIPES DATABASE
+const customRecipes = {
+  dosa: [
+    {
+      idMeal: "ind1",
+      strMeal: "Dosa",
+      strMealThumb: "https://source.unsplash.com/300x200/?dosa",
+      strCategory: "Breakfast",
+      strArea: "Indian"
+    }
+  ],
+
+  idly: [
+    {
+      idMeal: "ind2",
+      strMeal: "Idly",
+      strMealThumb: "https://source.unsplash.com/300x200/?idli",
+      strCategory: "Breakfast",
+      strArea: "Indian"
+    }
+  ],
+
+  poori: [
+    {
+      idMeal: "ind3",
+      strMeal: "Poori",
+      strMealThumb: "https://source.unsplash.com/300x200/?poori",
+      strCategory: "Breakfast",
+      strArea: "Indian"
+    }
+  ],
+
+  pongal: [
+    {
+      idMeal: "ind4",
+      strMeal: "Pongal",
+      strMealThumb: "https://source.unsplash.com/300x200/?pongal",
+      strCategory: "Breakfast",
+      strArea: "Indian"
+    }
+  ],
+
+  upma: [
+    {
+      idMeal: "ind5",
+      strMeal: "Upma",
+      strMealThumb: "https://source.unsplash.com/300x200/?upma",
+      strCategory: "Breakfast",
+      strArea: "Indian"
+    }
+  ],
+
+  biryani: [
+    {
+      idMeal: "ind6",
+      strMeal: "Biryani",
+      strMealThumb: "https://source.unsplash.com/300x200/?biryani",
+      strCategory: "Main",
+      strArea: "Indian"
+    }
+  ],
+
+  chapati: [
+    {
+      idMeal: "ind7",
+      strMeal: "Chapati",
+      strMealThumb: "https://source.unsplash.com/300x200/?roti",
+      strCategory: "Main",
+      strArea: "Indian"
+    }
+  ],
+
+  paneer: [
+    {
+      idMeal: "ind8",
+      strMeal: "Paneer Curry",
+      strMealThumb: "https://source.unsplash.com/300x200/?paneer",
+      strCategory: "Main",
+      strArea: "Indian"
+    }
+  ],
+
+  samosa: [
+    {
+      idMeal: "ind9",
+      strMeal: "Samosa",
+      strMealThumb: "https://source.unsplash.com/300x200/?samosa",
+      strCategory: "Snack",
+      strArea: "Indian"
+    }
+  ],
+
+  vada: [
+    {
+      idMeal: "ind10",
+      strMeal: "Medu Vada",
+      strMealThumb: "https://source.unsplash.com/300x200/?vada",
+      strCategory: "Breakfast",
+      strArea: "Indian"
+    }
+  ],
+
+  tea: [
+    {
+      idMeal: "ind11",
+      strMeal: "Masala Chai",
+      strMealThumb: "https://source.unsplash.com/300x200/?tea",
+      strCategory: "Beverage",
+      strArea: "Indian"
+    }
+  ]
+};
+  function renderRecipe(meal) {
+    const ingredients = getIngredients(meal);
+    const steps = meal.strInstructions
+      ? meal.strInstructions.split(/\r\n|\n|\r/).filter(s => s.trim().length > 10)
+      : [];
+    const ytId = meal.strYoutube ? meal.strYoutube.split('v=')[1] : null;
+    const isFav = isFavourite(meal.idMeal);
+
+    document.getElementById('content').innerHTML = `
+      <div style="background:var(--card);border-bottom:1px solid var(--border);padding:10px 2rem;display:flex;align-items:center;gap:6px;font-size:0.85rem;color:var(--text3);">
+        <a href="index.html" style="color:var(--accent);text-decoration:none;">Home</a>
+        <span>/</span>
+        <span>${meal.strMeal}</span>
+      </div>
+
+      <div class="container">
+        <div class="detail-grid">
+          <div>
+            <img src="${meal.strMealThumb}" alt="${meal.strMeal}" class="detail-img" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+          </div>
+          <div>
+            <h1 style="font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;margin-bottom:10px;">${meal.strMeal}</h1>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem;">
+              ${meal.strCategory ? `<span class="tag tag-accent">${meal.strCategory}</span>` : ''}
+              ${meal.strArea ? `<span class="tag">${meal.strArea}</span>` : ''}
+            </div>
+            <div class="meta-grid">
+              <div class="meta-box"><div class="label">Category</div><div class="value">${meal.strCategory || '–'}</div></div>
+              <div class="meta-box"><div class="label">Cuisine</div><div class="value">${meal.strArea || '–'}</div></div>
+              <div class="meta-box"><div class="label">Ingredients</div><div class="value">${ingredients.length} items</div></div>
+              <div class="meta-box"><div class="label">Steps</div><div class="value">${steps.length} steps</div></div>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:1rem;">
+              <button class="btn btn-primary" onclick="document.getElementById('planner-modal').classList.add('open')">+ Add to planner</button>
+              <button class="btn btn-outline" id="fav-btn" onclick="toggleFav()">
+                ${isFav ? '♥ Saved' : '♡ Save recipe'}
+              </button>
+              <a href="index.html" class="btn btn-outline">← Back</a>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:2rem;margin-bottom:2rem;">
+          <div>
+            <h2 class="section-title">Ingredients</h2>
+            ${ingredients.map(ing => `
+              <div class="ing-row">
+                <span>${ing.name}</span>
+                <span style="color:var(--text3);font-size:0.85rem;">${ing.measure}</span>
+              </div>
+            `).join('')}
+          </div>
+          <div>
+            <h2 class="section-title">Instructions</h2>
+            ${steps.map((s, i) => `
+              <div class="step">
+                <div class="step-num">${i + 1}</div>
+                <p>${s.trim()}</p>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        ${ytId ? `
+          <h2 class="section-title">Watch the tutorial</h2>
+          <iframe class="yt-embed" src="https://www.youtube.com/embed/${ytId}" allowfullscreen></iframe>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  function toggleFav() {
+    const saved = toggleFavourite(currentMeal);
+    document.getElementById('fav-btn').textContent = saved ? '♥ Saved' : '♡ Save recipe';
+    showToast(saved ? `Saved "${currentMeal.strMeal}"` : 'Removed from favourites');
+  }
+
+  function closeModal() {
+    document.getElementById('planner-modal').classList.remove('open');
+    document.getElementById('day-error').classList.remove('show');
+    document.getElementById('slot-error').classList.remove('show');
+  }
+
+  function confirmAddToPlanner() {
+    const day = document.getElementById('modal-day').value;
+    const slot = document.getElementById('modal-slot').value;
+    let valid = true;
+    if (!day) { document.getElementById('day-error').classList.add('show'); valid = false; } 
+    else document.getElementById('day-error').classList.remove('show');
+    if (!slot) { document.getElementById('slot-error').classList.add('show'); valid = false; } 
+    else document.getElementById('slot-error').classList.remove('show');
+    if (!valid) return;
+    setPlannerMeal(day, slot, currentMeal);
+    closeModal();
+    showToast(`Added to ${slot} on ${day}`);
+  }
+
+  init();
+</script>
+</body>
+</html>

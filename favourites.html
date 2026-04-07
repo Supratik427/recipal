@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Favourites – RecipePal</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">RecipePal</a>
+  <ul class="nav-links">
+    <li><a href="index.html">Search</a></li>
+    <li><a href="planner.html">Meal Planner</a></li>
+    <li><a href="favourites.html" class="active">Favourites</a></li>
+    <li><a href="add-recipe.html">Add Recipe</a></li>
+  </ul>
+</nav>
+
+<div class="page-header">
+  <h1>Saved Recipes</h1>
+  <p style="color:var(--text2);margin-top:4px;font-size:0.9rem;">Your personal collection of favourite meals</p>
+</div>
+
+<div class="container">
+  <div id="favs-container"></div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="js/api.js"></script>
+<script src="js/storage.js"></script>
+<script>
+  function render() {
+    const favs = getFavourites();
+    const ownRecipes = getOwnRecipes();
+    const container = document.getElementById('favs-container');
+
+    if (!favs.length && !ownRecipes.length) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <p style="font-size:3rem;">♡</p>
+          <p style="font-size:1.1rem;margin-bottom:1rem;">No saved recipes yet</p>
+          <a href="index.html" class="btn btn-primary">Browse recipes</a>
+        </div>
+      `;
+      return;
+    }
+
+    let html = '';
+
+    if (favs.length) {
+      html += `<h2 class="section-title">Favourites (${favs.length})</h2>`;
+      html += `<div class="recipe-grid">`;
+      html += favs.map(m => `
+        <div class="card recipe-card" onclick="window.location.href='recipe.html?id=${m.idMeal}'">
+          <img src="${m.strMealThumb}/preview" alt="${m.strMeal}" onerror="this.style.display='none'">
+          <div class="recipe-card-body">
+            <h3>${m.strMeal}</h3>
+            ${m.strCategory ? `<span class="tag">${m.strCategory}</span>` : ''}
+            <div class="recipe-card-meta">
+              <span style="font-size:0.8rem;color:var(--text3);">Tap to view</span>
+              <button class="heart-btn saved" onclick="event.stopPropagation();removeAndRefresh('${m.idMeal}','${m.strMeal.replace(/'/g,"\\'")}')">♥</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      html += `</div>`;
+    }
+
+    if (ownRecipes.length) {
+      html += `<h2 class="section-title" style="margin-top:2rem;">My Recipes (${ownRecipes.length})</h2>`;
+      html += `<div class="recipe-grid">`;
+      html += ownRecipes.map(r => `
+        <div class="card recipe-card" onclick="showOwnRecipe(${JSON.stringify(r).replace(/"/g,'&quot;')})">
+          <div class="img-placeholder" style="height:180px;display:flex;align-items:center;justify-content:center;background:var(--bg2);font-size:3rem;">🍽️</div>
+          <div class="recipe-card-body">
+            <h3>${r.name}</h3>
+            <span class="tag tag-accent">My Recipe</span>
+            <div class="recipe-card-meta">
+              <span style="font-size:0.8rem;color:var(--text3);">Custom</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      html += `</div>`;
+    }
+
+    container.innerHTML = html;
+  }
+
+  function removeAndRefresh(id, name) {
+    removeFavourite(id);
+    showToast(`Removed "${name}"`);
+    render();
+  }
+
+  function showOwnRecipe(r) {
+    alert(`${r.name}\n\nIngredients:\n${r.ingredients}\n\nSteps:\n${r.steps}`);
+  }
+
+  render();
+</script>
+</body>
+</html>
