@@ -11,49 +11,51 @@
 <div class="login-container">
 
     <h2>Login</h2>
-   <form onsubmit="handleLogin(event)">
-  <input type="email" id="email" placeholder="Enter email" required>
-  <input type="password" id="password" placeholder="Enter password" required>
+    <form id="loginForm">
+        <label>Email</label>
+        <input type="email" id="loginEmail" required>
 
-  <p id="error" style="color:red;"></p>
+        <label>Password</label>
+        <input type="password" id="loginPassword" minlength="6" required>
 
-  <button type="submit">Login</button>
-</form>
+        <button type="submit">Login</button>
     </form>
 
     <h2>Signup</h2>
-    <form onsubmit="handleSignup(event)">
-  <input type="text" id="name" placeholder="Enter name" required>
-  <input type="email" id="signup-email" placeholder="Enter email" required>
-  <input type="password" id="signup-password" placeholder="Enter password" required>
+    <form id="signupForm">
+        <label>Name</label>
+        <input type="text" id="signupName" required>
 
-  <p id="signup-error" style="color:red;"></p>
+        <label>Email</label>
+        <input type="email" id="signupEmail" required>
 
-  <button type="submit">Sign Up</button>
-</form>
+        <label>Password</label>
+        <input type="password" id="signupPassword" minlength="6" required>
+
+        <button type="submit">Signup</button>
     </form>
 
 </div>
 
 <script>
+document.addEventListener("DOMContentLoaded", function () {
+
     // LOGIN
     document.getElementById("loginForm").addEventListener("submit", function(e) {
         e.preventDefault();
 
-        const email = document.getElementById("loginEmail").value;
-        const password = document.getElementById("loginPassword").value;
+        const email = document.getElementById("loginEmail").value.trim();
+        const password = document.getElementById("loginPassword").value.trim();
 
-        if (password.length < 6) {
-            alert("Password must be at least 6 characters");
+        const storedUser = JSON.parse(localStorage.getItem("user"));
+
+        if (!storedUser || storedUser.email !== email || storedUser.password !== password) {
+            alert("Invalid email or password");
             return;
         }
 
-        // Save login status (optional but good)
-        localStorage.setItem("user", email);
-
         alert("Login successful!");
 
-        // 🔥 REDIRECT TO HOME PAGE
         window.location.href = "index.html";
     });
 
@@ -61,92 +63,25 @@
     document.getElementById("signupForm").addEventListener("submit", function(e) {
         e.preventDefault();
 
-        const name = document.getElementById("signupName").value;
-        const email = document.getElementById("signupEmail").value;
-        const password = document.getElementById("signupPassword").value;
+        const name = document.getElementById("signupName").value.trim();
+        const email = document.getElementById("signupEmail").value.trim();
+        const password = document.getElementById("signupPassword").value.trim();
 
         if (password.length < 6) {
             alert("Password must be at least 6 characters");
             return;
         }
-        function validateEmail(email) {
-  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return regex.test(email);
-}
 
-function handleLogin(event) {
-  event.preventDefault();
-
-  const email = document.getElementById("email").value.trim();
-  const error = document.getElementById("error");
-
-  error.textContent = "";
-
-  if (!validateEmail(email)) {
-    error.textContent = "Please enter a valid email address";
-    return;
-  }
-  function validateEmail(email) {
-  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return regex.test(email);
-}
-
-function validatePassword(password) {
-  return password.length >= 6;
-}
-
-function handleSignup(event) {
-  event.preventDefault();
-
-  const name = document.getElementById("name").value.trim();
-  const email = document.getElementById("signup-email").value.trim();
-  const password = document.getElementById("signup-password").value.trim();
-  const error = document.getElementById("signup-error");
-
-  error.textContent = "";
-
-  if (name === "") {
-    error.textContent = "Name cannot be empty";
-    return;
-  }
-
-  if (!validateEmail(email)) {
-    error.textContent = "Enter a valid email";
-    return;
-  }
-
-  if (!validatePassword(password)) {
-    error.textContent = "Password must be at least 6 characters";
-    return;
-  }
-
-  // Check if user already exists
-  const existingUser = JSON.parse(localStorage.getItem("user"));
-
-  if (existingUser && existingUser.email === email) {
-    error.textContent = "Email already registered";
-    return;
-  }
-
-  // Save user
-  const user = { name, email, password };
-  localStorage.setItem("user", JSON.stringify(user));
-
-  alert("Signup successful!");
-}
-
-  // continue login logic
-  alert("Login successful (demo)");
-}
-
-        // Save user (optional)
-        localStorage.setItem("user", email);
+        const user = { name, email, password };
+        localStorage.setItem("user", JSON.stringify(user));
 
         alert("Signup successful!");
 
-        // 🔥 REDIRECT TO HOME PAGE
         window.location.href = "index.html";
     });
+
+});
 </script>
+
 </body>
 </html>
