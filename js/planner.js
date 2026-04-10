@@ -77,8 +77,12 @@ async function generateShoppingList() {
   if (!listEl) return;
 
   const allIds = [];
+
+  // ✅ Allow duplicates (FIXED)
   Object.values(planner).forEach(day => {
-    Object.values(day).forEach(meal => { if (!allIds.includes(meal.idMeal)) allIds.push(meal.idMeal); });
+    Object.values(day).forEach(meal => { 
+      allIds.push(meal.idMeal);
+    });
   });
 
   if (!allIds.length) {
@@ -89,31 +93,58 @@ async function generateShoppingList() {
   listEl.innerHTML = '<div class="spinner" style="margin:1rem auto;"></div>';
 
   const allIngredients = {};
+
   for (const id of allIds) {
     try {
       const meal = await getRecipeById(id);
       if (!meal) continue;
+
       const ings = getIngredients(meal);
+
       ings.forEach(ing => {
         const key = ing.name.toLowerCase();
-        if (!allIngredients[key]) allIngredients[key] = { name: ing.name, measures: [] };
-        if (ing.measure) allIngredients[key].measures.push(ing.measure);
+
+        // ✅ Initialize with count
+        if (!allIngredients[key]) {
+          allIngredients[key] = { 
+            name: ing.name, 
+            count: 0, 
+            measures: [] 
+          };
+        }
+
+        // ✅ Count duplicates
+        allIngredients[key].count++;
+
+        if (ing.measure) {
+          allIngredients[key].measures.push(ing.measure);
+        }
       });
+
     } catch(e) {}
   }
 
-  const sorted = Object.values(allIngredients).sort((a,b) => a.name.localeCompare(b.name));
-  if (!sorted.length) { listEl.innerHTML = '<p style="color:var(--text3);">No ingredients found.</p>'; return; }
+  const sorted = Object.values(allIngredients)
+    .sort((a, b) => a.name.localeCompare(b.name));
 
+  if (!sorted.length) {
+    listEl.innerHTML = '<p style="color:var(--text3);">No ingredients found.</p>';
+    return;
+  }
+
+  // ✅ Improved UI with count
   listEl.innerHTML = sorted.map((ing, i) => `
     <div class="shopping-item" id="si-${i}">
       <input type="checkbox" id="chk-${i}" onchange="toggleItem(${i})">
-      <label for="chk-${i}" style="flex:1;">${ing.name}</label>
-      <span style="font-size:0.8rem;color:var(--text3);">${ing.measures.join(', ')}</span>
+      <label for="chk-${i}" style="flex:1;">
+        ${ing.name} ${ing.count > 1 ? `(x${ing.count})` : ''}
+      </label>
+      <span style="font-size:0.8rem;color:var(--text3);">
+        ${ing.measures.join(', ')}
+      </span>
     </div>
   `).join('');
 }
-
 function toggleItem(i) {
   document.getElementById(`si-${i}`).classList.toggle('checked', document.getElementById(`chk-${i}`).checked);
 }
