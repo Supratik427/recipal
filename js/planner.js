@@ -78,10 +78,12 @@ async function generateShoppingList() {
 
   const allIds = [];
 
-  // ✅ Allow duplicates (FIXED)
+  // ✅ Collect all meal IDs (including duplicates)
   Object.values(planner).forEach(day => {
-    Object.values(day).forEach(meal => { 
-      allIds.push(meal.idMeal);
+    Object.values(day).forEach(meal => {
+      if (meal && meal.idMeal) {
+        allIds.push(meal.idMeal);
+      }
     });
   });
 
@@ -100,28 +102,45 @@ async function generateShoppingList() {
       if (!meal) continue;
 
       const ings = getIngredients(meal);
+      if (!ings || !ings.length) continue;
 
       ings.forEach(ing => {
+        if (!ing || !ing.name) return;
+
         const key = ing.name.toLowerCase();
 
-        // ✅ Initialize with count
+        // ✅ Initialize
         if (!allIngredients[key]) {
-          allIngredients[key] = { 
-            name: ing.name, 
-            count: 0, 
-            measures: [] 
+          allIngredients[key] = {
+            name: ing.name,
+            quantity: 0,
+            unit: ''
           };
         }
 
-        // ✅ Count duplicates
-        allIngredients[key].count++;
-
+        // ✅ Parse "1 cup", "200g"
         if (ing.measure) {
-          allIngredients[key].measures.push(ing.measure);
+          const match = ing.measure.match(/([\d.]+)\s*(.*)/);
+
+          if (match) {
+            const qty = parseFloat(match[1]);
+            const unit = match[2] || '';
+
+            if (!isNaN(qty)) {
+              allIngredients[key].quantity += qty;
+
+              // Keep first unit
+              if (!allIngredients[key].unit) {
+                allIngredients[key].unit = unit;
+              }
+            }
+          }
         }
       });
 
-    } catch(e) {}
+    } catch (e) {
+      console.error("Error fetching meal:", id, e);
+    }
   }
 
   const sorted = Object.values(allIngredients)
@@ -132,15 +151,15 @@ async function generateShoppingList() {
     return;
   }
 
-  // ✅ Improved UI with count
+  // ✅ Render final list
   listEl.innerHTML = sorted.map((ing, i) => `
     <div class="shopping-item" id="si-${i}">
       <input type="checkbox" id="chk-${i}" onchange="toggleItem(${i})">
       <label for="chk-${i}" style="flex:1;">
-        ${ing.name} ${ing.count > 1 ? `(x${ing.count})` : ''}
+        ${ing.name}
       </label>
       <span style="font-size:0.8rem;color:var(--text3);">
-        ${ing.measures.join(', ')}
+        ${ing.quantity ? `${ing.quantity} ${ing.unit}` : ''}
       </span>
     </div>
   `).join('');
